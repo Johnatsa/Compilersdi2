@@ -17,6 +17,21 @@ public class MethodInfo {
         localvars = new LinkedHashMap<>();
     }
 
+    public MethodInfo(String n, String r, Map<String, VariableInfo> p){
+        this.name = n; 
+        this.retype = r;
+        this.params = p
+        localvars = new LinkedHashMap<>();
+    }
+
+    public MethodInfo(String n, String r, Map<String, VariableInfo> p, Map<String, VariableInfo> l){
+        this.name = n; 
+        this.retype = r;
+        this.params = p;
+        this.localvars = l;
+    }
+
+
     public void addParam(VariableInfo var){
         params.put(var.name, var);
     }

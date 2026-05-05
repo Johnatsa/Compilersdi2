@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class SymbolTable {
     //Fields
-    Map<String, ClassInfo> classes; 
+    public Map<String, ClassInfo> classes; 
 
     //Methods
     public SymbolTable(){
