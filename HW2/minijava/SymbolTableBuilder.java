@@ -162,7 +162,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         String myType = (String) n.f1.accept(this, st);
         String myName = (String) n.f2.accept(this, st);
 
-        System.out.println("Method: " + myType + " " + myName + " (" + argumentList + ")");
+        System.out.println("Method: " + myType + " " + myName);
         System.out.println("Local vars:");
 
         n.f3.accept(this, null);
@@ -215,7 +215,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
     * f1 -> FormalParameter()
     */
     public VariableInfo visit(FormalParameterTerm n, SymbolTable st) throws Exception {
-        return (VariableInfo) n.f1.accept(this, argu);
+        return (VariableInfo) n.f1.accept(this, st);
     }
 
     /**
@@ -226,7 +226,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         Map<String, VariableInfo> ret = new LinkedHashMap<>();
         for ( Node node: n.f0.nodes) {
             VariableInfo v = (VariableInfo) node.accept(this, null);
-            m.put(v.name, v);
+            ret.put(v.name, v);
         }
 
         return ret;
