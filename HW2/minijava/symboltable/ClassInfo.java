@@ -21,6 +21,10 @@ public class ClassInfo {
         fields.put(var.name, var);
     }
 
+    public void addParent(String name){
+        this.parent = name;
+    }
+
     public void addMethod(MethodInfo met){
         methods.put(met.name, met);
     }
