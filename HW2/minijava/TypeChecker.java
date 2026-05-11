@@ -10,6 +10,112 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         this.globalTable = st;
     }
 
+    //! Statements
+
+    //*Assignment statement
+    /**
+     * Grammar production:
+     * f0 -> Identifier()
+     * f1 -> "="
+     * f2 -> Expression()
+     * f3 -> ";"
+     */
+    @Override
+    public String visit(AssignmentStatement n, MethodInfo m) throws Exception{
+        String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!isSubtype(right, left))
+            throw new Exception("Type error: Can't assign " + right + " to " + left);
+        return null;
+    }
+
+    //*Array assignment statement
+    /**
+     * Grammar production:
+     * f0 -> Identifier()
+     * f1 -> "["
+     * f2 -> Expression()
+     * f3 -> "]"
+     * f4 -> "="
+     * f5 -> Expression()
+     * f6 -> ";"
+     */
+    @Override
+    public String visit(ArrayAssignmentStatement n, MethodInfo m) throws Exception{
+        String arrayType = n.f0.accept(this, m);
+        String indexType = n.f2.accept(this, m);
+        String valueType = n.f5.accept(this, m);
+
+        if(!arrayType.equals("int[]"))
+            throw new Exception("Type error: All arrays must be of type 'int[]");
+        if(!indexType.equals("int"))
+            throw new Exception("Type error: Can't use non 'int' to index an array");
+        if(!valueType.equals("int"))
+            throw new Exception("Type error: Arrays must contain only 'int'");
+        return null;
+    }   
+
+    //*If statement
+    /**
+     * Grammar production:
+     * f0 -> "if"
+     * f1 -> "("
+     * f2 -> Expression()
+     * f3 -> ")"
+     * f4 -> Statement()
+     * f5 -> "else"
+     * f6 -> Statement()
+     */
+    @Override
+    public String visit(IfStatement n, MethodInfo m) throws Exception{
+        String ExprType = n.f2.accept(this, m);
+
+        if(!ExprType.equals("boolean"))
+            throw new Exception("Type error: Condition must be of type 'boolean'");
+        n.f4.accept(this, m);
+        n.f6.accept(this, m);
+        return null;
+    }
+
+    //*While statement
+    /**
+     * Grammar production:
+     * f0 -> "while"
+     * f1 -> "("
+     * f2 -> Expression()
+     * f3 -> ")"
+     * f4 -> Statement()
+     */
+    @Override
+    public String visit(WhileStatement n, MethodInfo m) throws Exception{
+        String ExprType = n.f2.accept(this, m);
+    
+        if(!ExprType.equals("boolean"))
+            throw new Exception("Type error: Condition must be of type 'boolean'");  
+        n.f4.accept(this, m);
+        return null;
+    }
+
+    //*Print statement
+    /**
+     * Grammar production:
+     * f0 -> "System.out.println"
+     * f1 -> "("
+     * f2 -> Expression()
+     * f3 -> ")"
+     * f4 -> ";"
+     */
+    @Override
+    public String visit(PrintStatement n, MethodInfo m) throws Exception{
+        String ExprType = n.f2.accept(this, m);
+
+        if(!ExprType.equals("int"))
+            throw new Exception("Type error: Can only print objects of type'int'");
+        return null;
+    }
+
+
     //! Expressions
 
     //*Plus expression
@@ -49,7 +155,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         String right = n.f2.accept(this, m);
 
         if(!left.equals("int") || !right.equals("int"))
-            throw new Exception("Type error: Can't perform '-' with non 'int' types");
+            throw new Exception("Type error: Can't perform '*' with non 'int' types");
 
         return "int";              
     }
@@ -123,7 +229,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     public String visit(ArrayLength n, MethodInfo m) throws Exception{
         String type = n.f0.accept(this, m);
         if(!type.equals("int[]")) throw new Exception(".length requires type 'int[]'");
-        return "int"
+        return "int";
     }
 
     //*Message send
@@ -201,11 +307,11 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
                     actualCount++;
 
                     if (actualCount > expectedCount) {
-                        throw new Exception("Type Error: Too many arguments for method " + methodName);
+                        throw new Exception("Type Error: Too many arguments for method " + method_name);
                     }
 
                     if (!isSubtype(nextArgType, expectedParams.get(actualCount - 1).type)) {
-                        throw new Exception("Type Error: Method " + methodName + " argument " + actualCount + 
+                        throw new Exception("Type Error: Method " + method_name + " argument " + actualCount + 
                                             " expected " + expectedParams.get(actualCount - 1).type + 
                                             " but got " + nextArgType);
                     }
@@ -215,10 +321,10 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
 
         //Count check
         if (actualCount < expectedCount) {
-            throw new Exception("Type Error: Not enough arguments for method " + methodName + 
+            throw new Exception("Type Error: Not enough arguments for method " + method_name + 
                                 ". Expected " + expectedCount + " but got " + actualCount);
         }
-        return calledMethod.retype;
+        return method.retype;
     }
 
 
@@ -293,8 +399,8 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         String returnExpressionType = n.f10.accept(this, currentMethodInfo);
         String declared = currentMethodInfo.retype;
 
-        if (!isSubtype(returnExpressionType, declaredReturnType)) 
-            throw new Exception("Type Error in method " + methodName + ": Cannot return " + returnExpressionType + " when expecting " + declaredReturnType);
+        if (!isSubtype(returnExpressionType, declared)) 
+            throw new Exception("Type Error in method " + name + ": Cannot return " + returnExpressionType + " when expecting " + declaredReturnType);
 
         return null;
     }
@@ -383,8 +489,8 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         if(child.equals(parent))
             return true;
 
-        if (child.equals("int") || child.equals("boolean") || child.equals("int[]") || child.equals("boolean[]")
-            parent.equals("int") || parent.equals("boolean") || parent.equals("int[]") || parent.equals("boolean[]")) {
+        if (child.equals("int") || child.equals("boolean") || child.equals("int[]") || 
+            parent.equals("int") || parent.equals("boolean") || parent.equals("int[]")) {
             return false;
         }
 
