@@ -139,24 +139,11 @@ public interface Visitor {
    public void visit(Type n) throws Exception;
 
    /**
-    * f0 -> BooleanArrayType()
-    *       | IntegerArrayType()
-    */
-   public void visit(ArrayType n) throws Exception;
-
-   /**
-    * f0 -> "boolean"
-    * f1 -> "["
-    * f2 -> "]"
-    */
-   public void visit(BooleanArrayType n) throws Exception;
-
-   /**
     * f0 -> "int"
     * f1 -> "["
     * f2 -> "]"
     */
-   public void visit(IntegerArrayType n) throws Exception;
+   public void visit(ArrayType n) throws Exception;
 
    /**
     * f0 -> "boolean"
@@ -367,28 +354,13 @@ public interface Visitor {
    public void visit(ThisExpression n) throws Exception;
 
    /**
-    * f0 -> BooleanArrayAllocationExpression()
-    *       | IntegerArrayAllocationExpression()
-    */
-   public void visit(ArrayAllocationExpression n) throws Exception;
-
-   /**
-    * f0 -> "new"
-    * f1 -> "boolean"
-    * f2 -> "["
-    * f3 -> Expression()
-    * f4 -> "]"
-    */
-   public void visit(BooleanArrayAllocationExpression n) throws Exception;
-
-   /**
     * f0 -> "new"
     * f1 -> "int"
     * f2 -> "["
     * f3 -> Expression()
     * f4 -> "]"
     */
-   public void visit(IntegerArrayAllocationExpression n) throws Exception;
+   public void visit(ArrayAllocationExpression n) throws Exception;
 
    /**
     * f0 -> "new"

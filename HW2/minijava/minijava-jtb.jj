@@ -449,45 +449,6 @@ Type Type() :
 
 ArrayType ArrayType() :
 {
-   NodeChoice n0;
-   BooleanArrayType n1;
-   IntegerArrayType n2;
-
-   
-}
-{
-   (
-      n1=BooleanArrayType()
-      { n0 = new NodeChoice(n1, 0); }
-   |
-      n2=IntegerArrayType()
-      { n0 = new NodeChoice(n2, 1); }
-   )
-   
-   { return new ArrayType(n0); }
-}
-
-BooleanArrayType BooleanArrayType() :
-{
-   NodeToken n0;
-   Token n1;
-   NodeToken n2;
-   Token n3;
-   NodeToken n4;
-   Token n5;
-
-   
-}
-{
-   n1="boolean" { n0 = JTBToolkit.makeNodeToken(n1); }
-   n3="[" { n2 = JTBToolkit.makeNodeToken(n3); }
-   n5="]" { n4 = JTBToolkit.makeNodeToken(n5); }
-   
-   { return new BooleanArrayType(n0,n2,n4); }
-}
-
-IntegerArrayType IntegerArrayType() :
-{
    NodeToken n0;
    Token n1;
    NodeToken n2;
@@ -502,7 +463,7 @@ IntegerArrayType IntegerArrayType() :
    n3="[" { n2 = JTBToolkit.makeNodeToken(n3); }
    n5="]" { n4 = JTBToolkit.makeNodeToken(n5); }
    
-   { return new IntegerArrayType(n0,n2,n4); }
+   { return new ArrayType(n0,n2,n4); }
 }
 
 BooleanType BooleanType() :
@@ -1101,52 +1062,6 @@ ThisExpression ThisExpression() :
 
 ArrayAllocationExpression ArrayAllocationExpression() :
 {
-   NodeChoice n0;
-   BooleanArrayAllocationExpression n1;
-   IntegerArrayAllocationExpression n2;
-
-   
-}
-{
-   (
-      LOOKAHEAD(3)
-      n1=BooleanArrayAllocationExpression()
-      { n0 = new NodeChoice(n1, 0); }
-   |
-      LOOKAHEAD(3)
-      n2=IntegerArrayAllocationExpression()
-      { n0 = new NodeChoice(n2, 1); }
-   )
-   
-   { return new ArrayAllocationExpression(n0); }
-}
-
-BooleanArrayAllocationExpression BooleanArrayAllocationExpression() :
-{
-   NodeToken n0;
-   Token n1;
-   NodeToken n2;
-   Token n3;
-   NodeToken n4;
-   Token n5;
-   Expression n6;
-   NodeToken n7;
-   Token n8;
-
-   
-}
-{
-   n1="new" { n0 = JTBToolkit.makeNodeToken(n1); }
-   n3="boolean" { n2 = JTBToolkit.makeNodeToken(n3); }
-   n5="[" { n4 = JTBToolkit.makeNodeToken(n5); }
-   n6=Expression()
-   n8="]" { n7 = JTBToolkit.makeNodeToken(n8); }
-   
-   { return new BooleanArrayAllocationExpression(n0,n2,n4,n6,n7); }
-}
-
-IntegerArrayAllocationExpression IntegerArrayAllocationExpression() :
-{
    NodeToken n0;
    Token n1;
    NodeToken n2;
@@ -1166,7 +1081,7 @@ IntegerArrayAllocationExpression IntegerArrayAllocationExpression() :
    n6=Expression()
    n8="]" { n7 = JTBToolkit.makeNodeToken(n8); }
    
-   { return new IntegerArrayAllocationExpression(n0,n2,n4,n6,n7); }
+   { return new ArrayAllocationExpression(n0,n2,n4,n6,n7); }
 }
 
 AllocationExpression AllocationExpression() :

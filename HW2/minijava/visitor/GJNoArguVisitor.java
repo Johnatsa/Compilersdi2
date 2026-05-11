@@ -139,24 +139,11 @@ public interface GJNoArguVisitor<R> {
    public R visit(Type n) throws Exception;
 
    /**
-    * f0 -> BooleanArrayType()
-    *       | IntegerArrayType()
-    */
-   public R visit(ArrayType n) throws Exception;
-
-   /**
-    * f0 -> "boolean"
-    * f1 -> "["
-    * f2 -> "]"
-    */
-   public R visit(BooleanArrayType n) throws Exception;
-
-   /**
     * f0 -> "int"
     * f1 -> "["
     * f2 -> "]"
     */
-   public R visit(IntegerArrayType n) throws Exception;
+   public R visit(ArrayType n) throws Exception;
 
    /**
     * f0 -> "boolean"
@@ -367,28 +354,13 @@ public interface GJNoArguVisitor<R> {
    public R visit(ThisExpression n) throws Exception;
 
    /**
-    * f0 -> BooleanArrayAllocationExpression()
-    *       | IntegerArrayAllocationExpression()
-    */
-   public R visit(ArrayAllocationExpression n) throws Exception;
-
-   /**
-    * f0 -> "new"
-    * f1 -> "boolean"
-    * f2 -> "["
-    * f3 -> Expression()
-    * f4 -> "]"
-    */
-   public R visit(BooleanArrayAllocationExpression n) throws Exception;
-
-   /**
     * f0 -> "new"
     * f1 -> "int"
     * f2 -> "["
     * f3 -> Expression()
     * f4 -> "]"
     */
-   public R visit(IntegerArrayAllocationExpression n) throws Exception;
+   public R visit(ArrayAllocationExpression n) throws Exception;
 
    /**
     * f0 -> "new"

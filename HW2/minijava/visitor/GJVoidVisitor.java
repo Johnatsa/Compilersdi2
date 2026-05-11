@@ -139,24 +139,11 @@ public interface GJVoidVisitor<A> {
    public void visit(Type n, A argu) throws Exception;
 
    /**
-    * f0 -> BooleanArrayType()
-    *       | IntegerArrayType()
-    */
-   public void visit(ArrayType n, A argu) throws Exception;
-
-   /**
-    * f0 -> "boolean"
-    * f1 -> "["
-    * f2 -> "]"
-    */
-   public void visit(BooleanArrayType n, A argu) throws Exception;
-
-   /**
     * f0 -> "int"
     * f1 -> "["
     * f2 -> "]"
     */
-   public void visit(IntegerArrayType n, A argu) throws Exception;
+   public void visit(ArrayType n, A argu) throws Exception;
 
    /**
     * f0 -> "boolean"
@@ -367,28 +354,13 @@ public interface GJVoidVisitor<A> {
    public void visit(ThisExpression n, A argu) throws Exception;
 
    /**
-    * f0 -> BooleanArrayAllocationExpression()
-    *       | IntegerArrayAllocationExpression()
-    */
-   public void visit(ArrayAllocationExpression n, A argu) throws Exception;
-
-   /**
-    * f0 -> "new"
-    * f1 -> "boolean"
-    * f2 -> "["
-    * f3 -> Expression()
-    * f4 -> "]"
-    */
-   public void visit(BooleanArrayAllocationExpression n, A argu) throws Exception;
-
-   /**
     * f0 -> "new"
     * f1 -> "int"
     * f2 -> "["
     * f3 -> Expression()
     * f4 -> "]"
     */
-   public void visit(IntegerArrayAllocationExpression n, A argu) throws Exception;
+   public void visit(ArrayAllocationExpression n, A argu) throws Exception;
 
    /**
     * f0 -> "new"

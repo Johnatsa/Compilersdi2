@@ -139,24 +139,11 @@ public interface GJVisitor<R,A> {
    public R visit(Type n, A argu) throws Exception;
 
    /**
-    * f0 -> BooleanArrayType()
-    *       | IntegerArrayType()
-    */
-   public R visit(ArrayType n, A argu) throws Exception;
-
-   /**
-    * f0 -> "boolean"
-    * f1 -> "["
-    * f2 -> "]"
-    */
-   public R visit(BooleanArrayType n, A argu) throws Exception;
-
-   /**
     * f0 -> "int"
     * f1 -> "["
     * f2 -> "]"
     */
-   public R visit(IntegerArrayType n, A argu) throws Exception;
+   public R visit(ArrayType n, A argu) throws Exception;
 
    /**
     * f0 -> "boolean"
@@ -367,28 +354,13 @@ public interface GJVisitor<R,A> {
    public R visit(ThisExpression n, A argu) throws Exception;
 
    /**
-    * f0 -> BooleanArrayAllocationExpression()
-    *       | IntegerArrayAllocationExpression()
-    */
-   public R visit(ArrayAllocationExpression n, A argu) throws Exception;
-
-   /**
-    * f0 -> "new"
-    * f1 -> "boolean"
-    * f2 -> "["
-    * f3 -> Expression()
-    * f4 -> "]"
-    */
-   public R visit(BooleanArrayAllocationExpression n, A argu) throws Exception;
-
-   /**
     * f0 -> "new"
     * f1 -> "int"
     * f2 -> "["
     * f3 -> Expression()
     * f4 -> "]"
     */
-   public R visit(IntegerArrayAllocationExpression n, A argu) throws Exception;
+   public R visit(ArrayAllocationExpression n, A argu) throws Exception;
 
    /**
     * f0 -> "new"

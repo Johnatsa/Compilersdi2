@@ -10,7 +10,217 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         this.globalTable = st;
     }
 
-    //TODO Use class decl to implement currentClass 
+    //! Expressions
+
+    //*Plus expression
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "+"
+     * f2 -> PrimaryExpression()
+     */
+    @Override
+    public String visit(PlusExpression n, MethodInfo m) throws Exception{
+        String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!left.equals("int") || !right.equals("int"))
+            throw new Exception("Type error: Can't perform '+' with non 'int' types");
+
+        return "int";
+    }
+
+    //*Minus expression
+    @Override
+    public String visit(MinusExpression n, MethodInfo m) throws Exception{
+         String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!left.equals("int") || !right.equals("int"))
+            throw new Exception("Type error: Can't perform '-' with non 'int' types");
+
+        return "int";       
+    }
+
+    //*Times expression
+    @Override
+    public String visit(TimesExpression n, MethodInfo m) throws Exception{
+        String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!left.equals("int") || !right.equals("int"))
+            throw new Exception("Type error: Can't perform '-' with non 'int' types");
+
+        return "int";              
+    }
+
+    //*Compare expression
+    @Override
+    public String visit(CompareExpression n, MethodInfo m) throws Exception{
+        String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!left.equals("int") || !right.equals("int"))
+            throw new Exception("Type error: Can't perform '<' with non 'int' types");
+
+        return "boolean"; 
+    }
+
+    //*And expression
+    @Override
+    public String visit(AndExpression n, MethodInfo m) throws Exception{
+        String left = n.f0.accept(this, m);
+        String right = n.f2.accept(this, m);
+
+        if(!left.equals("boolean") || !right.equals("boolean"))
+            throw new Exception("Type error: Can't perform '&&' with non 'boolean' types");
+
+        return "boolean"; 
+    }
+
+    //*Not expression
+    @Override
+    public String visit(NotExpression n, MethodInfo m) throws Exception {
+        String middle = n.f1.accept(this, m);
+
+        if (!middle.equals("boolean")) {
+            throw new Exception("Type Error: Can't perform '!' with non 'boolean' type");
+        }
+
+        return "boolean";
+    }
+
+    //*Array lookup
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "["
+     * f2 -> PrimaryExpression()
+     * f3 -> "]"
+     */
+    @Override
+    public String visit(ArrayLookup n, MethodInfo m) throws Exception{
+        String type = n.f0.accept(this, m);
+        String index = n.f2.accept(this, m);
+
+        if(!index.equals("int"))
+            throw new Exception("Type error: Array index must be of type 'int'");
+
+        if(type.equals("int[]"))
+            return "int";
+
+        throw new Exception("Type Error: Cannot use [] on non-array type");
+    }
+
+    //*Array length
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "."
+     * f2 -> "length"
+     */
+    @Override
+    public String visit(ArrayLength n, MethodInfo m) throws Exception{
+        String type = n.f0.accept(this, m);
+        if(!type.equals("int[]")) throw new Exception(".length requires type 'int[]'");
+        return "int"
+    }
+
+    //*Message send
+    /**
+     * Grammar production:
+     * f0 -> PrimaryExpression()
+     * f1 -> "."
+     * f2 -> Identifier()
+     * f3 -> "("
+     * f4 -> ( ExpressionList() )?
+     * f5 -> ")"
+     */
+    @Override
+    public String visit(MessageSend n, MethodInfo m) throws Exception{
+        String type = n.f0.accept(this, m);
+
+        if(type.equals("int") || type.equals("boolean") || type.equals("int[]"))
+            throw new Exception("Type error: Can't call a method on a primitive type");
+        
+        //Treat the type as a classname
+        boolean found = false;
+        ClassInfo searchClass = this.globalTable.find_class(type);
+        String method_name = n.f2.f0.toString();
+
+        if(searchClass == null)
+            throw new Exception("Semantic error: Object doesn't exist");
+
+        while (searchClass != null) {
+            if(searchClass.methods.containsKey(method_name)){
+                found = true;
+                break;
+            }
+
+            if(searchClass.parent != null) 
+                searchClass = globalTable.find_class(searchClass.parent);
+            else 
+                searchClass = null;   
+        }
+
+        if(found == false)
+            throw new Exception("Semantic Error: class " + type + "doesn't contain method" + method_name);
+
+        MethodInfo method = searchClass.methods.get(method_name);
+
+        //Parameters we expect
+        List<VariableInfo> expectedParams = new ArrayList<>(method.params.values());
+        int expectedCount = expectedParams.size();
+        int actualCount = 0;
+
+        if (n.f4.present()) {
+            ExpressionList exprList = (ExpressionList) n.f4.node;
+
+            //Evaulate first parameter
+            String firstArgType = exprList.f0.accept(this, m);
+            actualCount++;
+
+            //Check the counts
+            if (actualCount > expectedCount) {
+                throw new Exception("Type Error: Too many arguments for method " + method_name);
+            }
+
+            //Type check first argument
+            if (!isSubtype(firstArgType, expectedParams.get(0).type)) {
+                throw new Exception("Type Error: Method " + method_name + 
+                                    " argument 1 expected " + expectedParams.get(0).type + 
+                                    " but got " + firstArgType);
+            }
+
+            //Rest of the arguments
+            if (exprList.f1.present()) {
+                for (int i = 0; i < exprList.f1.nodes.size(); i++) {
+                    ExpressionRest rest = (ExpressionRest) exprList.f1.nodes.get(i);
+
+                    String nextArgType = rest.f1.accept(this, m);
+                    actualCount++;
+
+                    if (actualCount > expectedCount) {
+                        throw new Exception("Type Error: Too many arguments for method " + methodName);
+                    }
+
+                    if (!isSubtype(nextArgType, expectedParams.get(actualCount - 1).type)) {
+                        throw new Exception("Type Error: Method " + methodName + " argument " + actualCount + 
+                                            " expected " + expectedParams.get(actualCount - 1).type + 
+                                            " but got " + nextArgType);
+                    }
+                }
+            }
+        }
+
+        //Count check
+        if (actualCount < expectedCount) {
+            throw new Exception("Type Error: Not enough arguments for method " + methodName + 
+                                ". Expected " + expectedCount + " but got " + actualCount);
+        }
+        return calledMethod.retype;
+    }
+
 
     //! Declarations:
 
@@ -161,19 +371,13 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     public String visit(ThisExpression n, MethodInfo m) throws Exception{
         return this.currentClass;
     }
-
-    //*Boolean array
+    
+    //* Array Allocation Expression
     @Override
-    public String visit(BooleanArrayAllocationExpression n, MethodInfo m) throws Exception{
-        return "boolean[]";
-    }
-
-    //*Integer array
-    @Override 
-    public String visit(IntegerArrayAllocationExpression n, MethodInfo m) throws Exception{
+    public String visit(ArrayAllocationExpression n, MethodInfo m) throws Exception{
         return "int[]";
     }
-    
+
     //*Helper functions
     public boolean isSubtype(String child, String parent){
         if(child.equals(parent))
