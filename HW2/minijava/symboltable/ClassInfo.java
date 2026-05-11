@@ -26,7 +26,7 @@ public class ClassInfo {
     }
 
     public void addMethod(MethodInfo met){
-        methods.put(met.name, met);
+        methods.put(met.getSignature(), met);
     }
 }
 

@@ -51,6 +51,9 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         String classname = (String) n.f1.accept(this, st);
         System.out.println("Class: " + classname);
         
+        if (st.classes.containsKey(classname))
+            throw new Exception("Semantic Error: Class already exists");
+
         ClassInfo c = new ClassInfo(classname, null);
 
         n.f2.accept(this, null);
@@ -59,6 +62,8 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         if (n.f3.present()) { 
             for (int i = 0; i < n.f3.nodes.size(); i++) {
                 VariableInfo v = (VariableInfo) n.f3.nodes.get(i).accept(this, st); 
+                if(c.fields.containsKey(v.name))
+                    throw new Exception("Semantic error: Variable already exists");
                 c.addField(v);
             }
         }
@@ -96,8 +101,14 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         String classname = (String) n.f1.accept(this, st);
         System.out.println("Class: " + classname);
 
+        if (st.classes.containsKey(classname))
+            throw new Exception("Semantic Error: Class already exists");
+
         n.f2.accept(this, null);
         String parentname = (String) n.f3.accept(this, st);
+
+        if (!st.classes.containsKey(parentname))
+            throw new Exception("Semantic Error: Cannot extend class. It has not been defined yet");
 
         ClassInfo c = new ClassInfo(classname, parentname);
 
@@ -107,6 +118,8 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         if (n.f5.present()) { 
             for (int i = 0; i < n.f5.nodes.size(); i++) {
                 VariableInfo v = (VariableInfo) n.f5.nodes.get(i).accept(this, st); 
+                if(c.fields.containsKey(v.name))
+                    throw new Exception("Semantic error: Variable already exists");
                 c.addField(v);
             }
         }
@@ -176,8 +189,12 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         Map<String, VariableInfo> locals = new LinkedHashMap<>();
         
         if (n.f7.present()) { 
-            for (int i = 0; i < n.f7.nodes.size(); i++) {
+            for(int i = 0; i < n.f7.nodes.size(); i++) {
                 VariableInfo v = (VariableInfo) n.f7.nodes.get(i).accept(this, st); 
+                if(locals.containsKey(v.name))
+                    throw new Exception("Semantic error: Local variable already exists");
+                if(params != null && params.containsKey(v.name)) 
+                    throw new Exception("Semantic error: Parameter witht the same name already exists");
                 locals.put(v.name, v);
             }
         }
@@ -200,11 +217,16 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
     public Map<String, VariableInfo> visit(FormalParameterList n, SymbolTable st) throws Exception {
         Map<String, VariableInfo> ret = new LinkedHashMap<>();
         VariableInfo v = (VariableInfo) n.f0.accept(this, null);
+        
         ret.put(v.name, v);
 
         if (n.f1 != null) {
             Map<String, VariableInfo> tailMap = (Map<String, VariableInfo>) n.f1.accept(this, st);
-            ret.putAll(tailMap);
+                for (String paramName : tailMap.keySet()) {
+                    if (ret.containsKey(paramName)) 
+                        throw new Exception("Semantic error: Duplicate parameter name");
+                    ret.put(paramName, tailMap.get(paramName));
+            }
         }
 
         return ret;
@@ -224,11 +246,15 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
     @Override
     public Map<String, VariableInfo> visit(FormalParameterTail n, SymbolTable st) throws Exception {
         Map<String, VariableInfo> ret = new LinkedHashMap<>();
-        for ( Node node: n.f0.nodes) {
-            VariableInfo v = (VariableInfo) node.accept(this, null);
-            ret.put(v.name, v);
+        if(n.f0.present()){
+            for ( Node node: n.f0.nodes) {
+                VariableInfo v = (VariableInfo) node.accept(this, null);
+                
+                if (ret.containsKey(v.name)) 
+                    throw new Exception("Semantic error: Duplicate parameter name");
+                ret.put(v.name, v);
+            }
         }
-
         return ret;
     }
 

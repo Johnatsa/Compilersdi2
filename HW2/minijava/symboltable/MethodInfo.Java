@@ -39,4 +39,12 @@ public class MethodInfo {
     public void addLocal(VariableInfo var){
         localvars.put(var.name, var);
     }
+
+    public String getSignature(){
+        StringBuilder sig = new StringBuilder(this.name);
+        for(VariableInfo param : this.params.values()){
+            sig.append("_").append(param.type);
+        }
+        return sig.toString();
+    }
 }

@@ -33,7 +33,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     //*Array assignment statement
     /**
      * Grammar production:
-     * f0 -> Identifier()
+     * f0 -> Identifier()j
      * f1 -> "["
      * f2 -> Expression()
      * f3 -> "]"
@@ -117,6 +117,12 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
 
 
     //! Expressions
+
+    //*Bracket expression
+    @Override 
+    public String visit(BracketExpression n, MethodInfo m) throws Exception{
+        return n.f1.accept(this, m);
+    }
 
     //*Plus expression
     /**
@@ -249,82 +255,56 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         if(type.equals("int") || type.equals("boolean") || type.equals("int[]"))
             throw new Exception("Type error: Can't call a method on a primitive type");
         
-        //Treat the type as a classname
-        boolean found = false;
+        //Treat type as a classname
         ClassInfo searchClass = this.globalTable.find_class(type);
         String method_name = n.f2.f0.toString();
 
         if(searchClass == null)
             throw new Exception("Semantic error: Object doesn't exist");
+        List<String> argTypes = new ArrayList<>();
+        if(n.f4.present()){
+            ExpressionList exprList= (ExpressionList) n.f4.node;
+            argTypes.add(exprList.f0.accept(this, m)); //first arg
 
-        while (searchClass != null) {
-            if(searchClass.methods.containsKey(method_name)){
-                found = true;
-                break;
-            }
-
-            if(searchClass.parent != null) 
-                searchClass = globalTable.find_class(searchClass.parent);
-            else 
-                searchClass = null;   
-        }
-
-        if(found == false)
-            throw new Exception("Semantic Error: class " + type + "doesn't contain method" + method_name);
-
-        MethodInfo method = searchClass.methods.get(method_name);
-
-        //Parameters we expect
-        List<VariableInfo> expectedParams = new ArrayList<>(method.params.values());
-        int expectedCount = expectedParams.size();
-        int actualCount = 0;
-
-        if (n.f4.present()) {
-            ExpressionList exprList = (ExpressionList) n.f4.node;
-
-            //Evaulate first parameter
-            String firstArgType = exprList.f0.accept(this, m);
-            actualCount++;
-
-            //Check the counts
-            if (actualCount > expectedCount) {
-                throw new Exception("Type Error: Too many arguments for method " + method_name);
-            }
-
-            //Type check first argument
-            if (!isSubtype(firstArgType, expectedParams.get(0).type)) {
-                throw new Exception("Type Error: Method " + method_name + 
-                                    " argument 1 expected " + expectedParams.get(0).type + 
-                                    " but got " + firstArgType);
-            }
-
-            //Rest of the arguments
-            if (exprList.f1.present()) {
-                for (int i = 0; i < exprList.f1.nodes.size(); i++) {
+            if(exprList.f1.present()){ //Remainder args
+                for(int i = 0; i < exprList.f1.nodes.size(); i++){
                     ExpressionRest rest = (ExpressionRest) exprList.f1.nodes.get(i);
-
-                    String nextArgType = rest.f1.accept(this, m);
-                    actualCount++;
-
-                    if (actualCount > expectedCount) {
-                        throw new Exception("Type Error: Too many arguments for method " + method_name);
-                    }
-
-                    if (!isSubtype(nextArgType, expectedParams.get(actualCount - 1).type)) {
-                        throw new Exception("Type Error: Method " + method_name + " argument " + actualCount + 
-                                            " expected " + expectedParams.get(actualCount - 1).type + 
-                                            " but got " + nextArgType);
-                    }
+                    argTypes.add(rest.f1.accept(this, m));
                 }
             }
         }
+        MethodInfo matchedMethod = null;
 
-        //Count check
-        if (actualCount < expectedCount) {
-            throw new Exception("Type Error: Not enough arguments for method " + method_name + 
-                                ". Expected " + expectedCount + " but got " + actualCount);
+        while (currClass != null && matchedMethod == null) {
+            for (MethodInfo method : currClass.methods.values()) {
+                if (method.name.equals(methodName) && method.params.size() == ArgTypes.size()) {
+                    boolean isValidMatch = true;
+                    List<VariableInfo> expectedParams = new ArrayList<>(method.params.values());
+                    
+                    for (int i = 0; i < ArgTypes.size(); i++) {
+                        if (!isSubtype(ArgTypes.get(i), expectedParams.get(i).type)) {
+                            isValidMatch = false;
+                            break;
+                        }
+                    }
+                    if (isValidMatch) {
+                        matchedMethod = method;
+                        break;
+                    }
+                }
+            }
+            
+            if (matchedMethod == null && currClass.parent != null) 
+                currClass = globalTable.find_class(currClass.parent);
+            else 
+                currClass = null; 
+            
         }
-        return method.retype;
+
+        if(matchedMethod == null)
+            throw new Exception("Type Error: No matching method found for call '" + methodName + "' with the provided arguments in class " + objType);
+
+        return matchedMethod.retype;
     }
 
 
@@ -390,17 +370,73 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     @Override
     public String visit(MethodDeclaration n, MethodInfo m) throws Exception{
         String name = n.f2.f0.toString();
-        
         ClassInfo currentClassInfo = this.globalTable.find_class(this.currentClass);
-        MethodInfo currentMethodInfo = currentClassInfo.methods.get(name);
+        
+        List<String> declaredParamTypes = new ArrayList<>();
+        if(n.f4.present()) {
+            FormalParameterList fpl = (FormalParameterList) n.f4.node;
+            declaredParamTypes.add(fpl.f0.f0.accept(this, null));
+            if(fpl.f1.present()) {
+                FormalParameterTail tail = (FormalParameterTail) fpl.f1;
+                for(Node node : tail.f0.nodes) {
+                    FormalParameterTerm term = (FormalParameterTerm) node;
+                    declaredParamTypes.add(term.f1.f0.accept(this, null));
+                }
+            }
+        }
+        
+        StringBuilder sigBuilder = new StringBuilder(name);
+        for(String t : declaredParamTypes) sigBuilder.append("_").append(t);
+        String mySignature = sigBuilder.toString();
+        
+        MethodInfo currentMethodInfo = currentClassInfo.methods.get(mySignature);
 
+        
+        ClassInfo searchClass = currentClassInfo;
+        while(searchClass != null) {
+            for(MethodInfo otherMethod : searchClass.methods.values()) {
+                // If it's a different method but shares the same name and same parameter count
+                if (otherMethod != currentMethodInfo && otherMethod.name.equals(name)) {
+                    if (otherMethod.params.size() == currentMethodInfo.params.size()) {
+                        
+                        boolean exactMatch = true;
+                        boolean allSubOrSuper = true;
+                        
+                        List<VariableInfo> myParams = new ArrayList<>(currentMethodInfo.params.values());
+                        List<VariableInfo> otherParams = new ArrayList<>(otherMethod.params.values());
+                        
+                        for(int i = 0; i < myParams.size(); i++) {
+                            String t1 = myParams.get(i).type;
+                            String t2 = otherParams.get(i).type;
+                            
+                            if (!t1.equals(t2)) exactMatch = false;
+                            
+                            if (!isSubtype(t1, t2) && !isSubtype(t2, t1)) {
+                                allSubOrSuper = false; 
+                            }
+                        }
+                        
+                        if(allSubOrSuper) {
+                            if (exactMatch && searchClass != currentClassInfo) {
+                                if (!currentMethodInfo.retype.equals(otherMethod.retype)) {
+                                    throw new Exception("Semantic Error: Overriding method '" + name + "' must have same return type as parent.");
+                                }
+                            } else {
+                                throw new Exception("Semantic Error: Invalid overloading for method '" + name + "'. Arguments have a strict subtype/supertype relationship.");
+                            }
+                        }
+                    }
+                }
+            }
+            searchClass = searchClass.parent != null ? this.globalTable.find_class(searchClass.parent) : null;
+        }
+
+        // 3. Finally, visit the statements and check the return type
         n.f8.accept(this, currentMethodInfo);
 
         String returnExpressionType = n.f10.accept(this, currentMethodInfo);
-        String declared = currentMethodInfo.retype;
-
-        if (!isSubtype(returnExpressionType, declared)) 
-            throw new Exception("Type Error in method " + name + ": Cannot return " + returnExpressionType + " when expecting " + declaredReturnType);
+        if (!isSubtype(returnExpressionType, currentMethodInfo.retype)) 
+            throw new Exception("Type Error in method " + name + ": Cannot return '" + returnExpressionType + "' when expecting '" + currentMethodInfo.retype + "'");
 
         return null;
     }
@@ -497,7 +533,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         ClassInfo searchClass = globalTable.find_class(child);
     
         while (searchClass != null && searchClass.parent != null) {
-            if (searchClass.parent.equals(parentType)) 
+            if (searchClass.parent.equals(parent)) 
                 return true;
             
             searchClass = globalTable.find_class(searchClass.parent);
