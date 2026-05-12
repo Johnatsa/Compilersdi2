@@ -5,8 +5,8 @@ import syntaxtree.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        if(args.length != 1){
-            System.err.println("Usage: java Main <inputFile>");
+        if(args.length < 1){
+            System.err.println("Usage: java Main <inputFile1> <inputFile2> ... ");
             System.exit(1);
         }
 

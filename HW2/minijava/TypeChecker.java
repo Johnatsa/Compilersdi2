@@ -275,6 +275,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         }
         MethodInfo matchedMethod = null;
 
+        ClassInfo currClass = searchClass;
         while (currClass != null && matchedMethod == null) {
             for (MethodInfo method : currClass.methods.values()) {
                 if (method.name.equals(methodName) && method.params.size() == ArgTypes.size()) {
