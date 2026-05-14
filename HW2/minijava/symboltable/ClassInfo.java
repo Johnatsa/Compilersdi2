@@ -7,16 +7,16 @@ public class ClassInfo {
     //Fields
     
     //Class info
-    String name;
-    String parent;
-    Map<String, VariableInfo> fields;
-    Map<String, MethodInfo> methods;
+    public String name;
+    public String parent;
+    public Map<String, VariableInfo> fields;
+    public Map<String, MethodInfo> methods;
 
     //Offsets
-    int currFieldOffset;
-    int currMethodOffset;
-    Map<String, Integer> fieldOffsets;
-    Map<String, Integer> methodOffsets;
+    public int currFieldOffset;
+    public int currMethodOffset;
+    public Map<String, Integer> fieldOffsets;
+    public Map<String, Integer> methodOffsets;
 
     //Methods
     public ClassInfo(String n, String p){

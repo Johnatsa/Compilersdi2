@@ -20,7 +20,7 @@ public class MethodInfo {
     public MethodInfo(String n, String r, Map<String, VariableInfo> p){
         this.name = n; 
         this.retype = r;
-        this.params = p
+        this.params = p;
         localvars = new LinkedHashMap<>();
     }
 

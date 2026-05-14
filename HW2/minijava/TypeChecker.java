@@ -1,3 +1,4 @@
+import java.util.*;
 import syntaxtree.*;
 import visitor.*;
 import symboltable.*;
@@ -266,9 +267,9 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
             ExpressionList exprList= (ExpressionList) n.f4.node;
             argTypes.add(exprList.f0.accept(this, m)); //first arg
 
-            if(exprList.f1.present()){ //Remainder args
-                for(int i = 0; i < exprList.f1.nodes.size(); i++){
-                    ExpressionRest rest = (ExpressionRest) exprList.f1.nodes.get(i);
+            if(exprList.f1.f0.present()){ //Remainder args
+                for(int i = 0; i < exprList.f1.f0.nodes.size(); i++){
+                    ExpressionTerm rest = (ExpressionTerm) exprList.f1.f0.nodes.get(i);
                     argTypes.add(rest.f1.accept(this, m));
                 }
             }
@@ -278,12 +279,12 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         ClassInfo currClass = searchClass;
         while (currClass != null && matchedMethod == null) {
             for (MethodInfo method : currClass.methods.values()) {
-                if (method.name.equals(methodName) && method.params.size() == ArgTypes.size()) {
+                if (method.name.equals(method_name) && method.params.size() == argTypes.size()) {
                     boolean isValidMatch = true;
                     List<VariableInfo> expectedParams = new ArrayList<>(method.params.values());
                     
-                    for (int i = 0; i < ArgTypes.size(); i++) {
-                        if (!isSubtype(ArgTypes.get(i), expectedParams.get(i).type)) {
+                    for (int i = 0; i < argTypes.size(); i++) {
+                        if (!isSubtype(argTypes.get(i), expectedParams.get(i).type)) {
                             isValidMatch = false;
                             break;
                         }
@@ -303,7 +304,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         }
 
         if(matchedMethod == null)
-            throw new Exception("Type Error: No matching method found for call '" + methodName + "' with the provided arguments in class " + objType);
+            throw new Exception("Type Error: No matching method found for call '" + method_name + "' with the provided arguments in class " + type);
 
         return matchedMethod.retype;
     }
@@ -377,7 +378,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         if(n.f4.present()) {
             FormalParameterList fpl = (FormalParameterList) n.f4.node;
             declaredParamTypes.add(fpl.f0.f0.accept(this, null));
-            if(fpl.f1.present()) {
+            if(fpl.f1.f0.present()) {
                 FormalParameterTail tail = (FormalParameterTail) fpl.f1;
                 for(Node node : tail.f0.nodes) {
                     FormalParameterTerm term = (FormalParameterTerm) node;
