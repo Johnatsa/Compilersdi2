@@ -11,6 +11,38 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         this.globalTable = st;
     }
 
+    //* Main Class
+    /**
+     * Grammar production:
+     * f0 -> "class"
+     * f1 -> Identifier()
+     * f2 -> "{"
+     * f3 -> "public"
+     * f4 -> "static"
+     * f5 -> "void"
+     * f6 -> "main"
+     * f7 -> "("
+     * f8 -> "String"
+     * f9 -> "["
+     * f10 -> "]"
+     * f11 -> Identifier()
+     * f12 -> ")"
+     * f13 -> "{"
+     * f14 -> ( VarDeclaration() )*
+     * f15 -> ( Statement() )*
+     * f16 -> "}"
+     * f17 -> "}"
+     */
+    @Override
+    public String visit(MainClass n, MethodInfo m) throws Exception {
+        this.currentClass = n.f1.f0.toString();
+        
+        n.f15.accept(this, null); 
+
+        return null;
+    }
+
+
     //! Statements
 
     //*Assignment statement
@@ -325,7 +357,6 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     @Override
     public String visit(ClassDeclaration n, MethodInfo m) throws Exception{
         this.currentClass = n.f1.f0.toString();
-        n.f3.accept(this, m);
         n.f4.accept(this, m);
         return null;
     }
@@ -347,7 +378,6 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         this.currentClass = n.f1.f0.toString();
         String parent = n.f3.f0.toString();
         this.globalTable.find_class(this.currentClass).addParent(parent);
-        n.f5.accept(this, m);
         n.f6.accept(this, m);
         return null;
     }
@@ -377,12 +407,12 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         List<String> declaredParamTypes = new ArrayList<>();
         if(n.f4.present()) {
             FormalParameterList fpl = (FormalParameterList) n.f4.node;
-            declaredParamTypes.add(fpl.f0.f0.accept(this, null));
+            declaredParamTypes.add(getTypeString(fpl.f0.f0));
             if(fpl.f1.f0.present()) {
                 FormalParameterTail tail = (FormalParameterTail) fpl.f1;
                 for(Node node : tail.f0.nodes) {
                     FormalParameterTerm term = (FormalParameterTerm) node;
-                    declaredParamTypes.add(term.f1.f0.accept(this, null));
+                    declaredParamTypes.add(getTypeString(term.f1.f0));
                 }
             }
         }
@@ -393,6 +423,9 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         
         MethodInfo currentMethodInfo = currentClassInfo.methods.get(mySignature);
 
+        if (currentMethodInfo == null) {
+            throw new Exception("Compiler Bug: Could not find method '" + mySignature + "' in Symbol Table!");
+        }
         
         ClassInfo searchClass = currentClassInfo;
         while(searchClass != null) {
@@ -523,6 +556,8 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
     }
 
     //*Helper functions
+
+    //Checks for subtypes: If a subclass is named with the name of the parent
     public boolean isSubtype(String child, String parent){
         if(child.equals(parent))
             return true;
@@ -542,6 +577,16 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
         }
 
         return false;
+    }
+    
+    //Evaluates primitive types. Helpful for method declaration instead of using more visitors.
+    public String getTypeString(Type t) {
+        Node choice = t.f0.choice;
+        if (choice instanceof ArrayType) return "int[]";
+        if (choice instanceof BooleanType) return "boolean";
+        if (choice instanceof IntegerType) return "int";
+        if (choice instanceof Identifier) return ((Identifier)choice).f0.toString();
+        return "";
     }
 }
 

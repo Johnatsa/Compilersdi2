@@ -28,7 +28,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
     @Override
     public String visit(MainClass n, SymbolTable st) throws Exception {
         String classname = (String) n.f1.accept(this, null);
-        System.out.println("Class: " + classname);
+        // System.out.println("Class: " + classname);
 
         super.visit(n, st);
 
@@ -50,7 +50,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         n.f0.accept(this, null);
         
         String classname = (String) n.f1.accept(this, st);
-        System.out.println("Class: " + classname);
+        // System.out.println("Class: " + classname);
         
         if (st.classes.containsKey(classname))
             throw new Exception("Semantic Error: Class already exists");
@@ -59,7 +59,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
 
         n.f2.accept(this, null);
         
-        System.out.println("Fields: ");
+        // System.out.println("Fields: ");
         if (n.f3.present()) { 
             for (int i = 0; i < n.f3.nodes.size(); i++) {
                 VariableInfo v = (VariableInfo) n.f3.nodes.get(i).accept(this, st); 
@@ -69,7 +69,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
             }
         }
         
-        System.out.println("Methods: ");
+        // System.out.println("Methods: ");
         if (n.f4.present()) { 
             for (int i = 0; i < n.f4.nodes.size(); i++) {
                 MethodInfo m = (MethodInfo) n.f4.nodes.get(i).accept(this, st); 
@@ -100,7 +100,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         n.f0.accept(this, null);
 
         String classname = (String) n.f1.accept(this, st);
-        System.out.println("Class: " + classname);
+        // System.out.println("Class: " + classname);
 
         if (st.classes.containsKey(classname))
             throw new Exception("Semantic Error: Class already exists");
@@ -115,7 +115,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
 
         n.f4.accept(this, null);
         
-        System.out.println("Fields: ");
+        // System.out.println("Fields: ");
         if (n.f5.present()) { 
             for (int i = 0; i < n.f5.nodes.size(); i++) {
                 VariableInfo v = (VariableInfo) n.f5.nodes.get(i).accept(this, st); 
@@ -125,7 +125,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
             }
         }
         
-        System.out.println("Methods: ");
+        // System.out.println("Methods: ");
         if (n.f6.present()) { 
             for (int i = 0; i < n.f6.nodes.size(); i++) {
                 MethodInfo m = (MethodInfo) n.f6.nodes.get(i).accept(this, st); 
@@ -136,7 +136,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         n.f7.accept(this, null);
 
         st.add(classname, c);
-        System.out.println();
+        // System.out.println();
 
         return null;
     }
@@ -149,7 +149,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
    public VariableInfo visit(VarDeclaration n, SymbolTable st) throws Exception {
         String type = (String) n.f0.accept(this, st);
         String var = (String) n.f1.accept(this, st);
-        System.out.println(var + " " + type);
+        // System.out.println(var + " " + type);
         
         VariableInfo ret = new VariableInfo(type, var);
         n.f2.accept(this, null);
@@ -176,13 +176,14 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
         String myType = (String) n.f1.accept(this, st);
         String myName = (String) n.f2.accept(this, st);
 
-        System.out.println("Method: " + myType + " " + myName);
-        System.out.println("Local vars:");
+        // System.out.println("Method: " + myType + " " + myName);
+        // System.out.println("Local vars:");
 
         n.f3.accept(this, null);
         
         Map<String, VariableInfo> params = new LinkedHashMap<>();
-        params = (Map<String, VariableInfo>) n.f4.accept(this, st);
+        if(n.f4.present())
+            params = (Map<String, VariableInfo>) n.f4.accept(this, st);
 
         n.f5.accept(this, null);
         n.f6.accept(this, null);
