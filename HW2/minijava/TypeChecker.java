@@ -414,7 +414,7 @@ class TypeChecker extends GJDepthFirst<String, MethodInfo>{
                     FormalParameterTerm term = (FormalParameterTerm) node;
                     declaredParamTypes.add(getTypeString(term.f1.f0));
                 }
-            }
+            } 
         }
         
         StringBuilder sigBuilder = new StringBuilder(name);

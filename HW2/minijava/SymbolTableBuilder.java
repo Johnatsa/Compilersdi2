@@ -196,7 +196,7 @@ class SymbolTableBuilder extends GJDepthFirst<Object, SymbolTable>{
                 if(locals.containsKey(v.name))
                     throw new Exception("Semantic error: Local variable already exists");
                 if(params != null && params.containsKey(v.name)) 
-                    throw new Exception("Semantic error: Parameter witht the same name already exists");
+                    throw new Exception("Semantic error: Parameter with the same name already exists");
                 locals.put(v.name, v);
             }
         }
